@@ -90,9 +90,7 @@ def read_job_json(cursor11):
 
 
 if __name__ == '__main__':
-    print(now3)
-
-    # db = mysql_connect()
-    # cursor = db.cursor()
-    # read_job_json(cursor)
-    # db.close()
+    db = mysql_connect()
+    cursor = db.cursor()
+    read_job_json(cursor)
+    db.close()
