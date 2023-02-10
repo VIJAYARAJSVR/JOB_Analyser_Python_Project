@@ -16,8 +16,8 @@ tbl_name = 'JOB_Analyser_App_jobdetail'
 
 insert_query = '''INSERT INTO
  JOB_Analyser_App_jobdetail(company,designation,url,experience,type,salary,
- source,email,website,posted,applied,created,description,skill)
-  VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+ source,email,website,posted,applied,created,description,description_html,skill)
+  VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
 
 
 def mysql_connect():
@@ -51,13 +51,18 @@ def format_applied_date(applied_dt, applied_time):
 
 
 def add_new_record(cursor1, r_data):
+    # mydesc = r_data['Description']
+    # print(mydesc)
+    # return
+
     jb_detail = (
         r_data['Company'], r_data['Designation'], r_data['Url'], r_data['Experience'], r_data['JobType'],
         r_data['Salary'],
         r_data['JOBSource'],
         r_data['Email'], r_data['Website'], r_data['PostedDate'],
         format_applied_date(r_data['AppliedDate'], r_data['AppliedTime']), now,
-        r_data['Description'], r_data['Skills'])
+        r_data['Description'], r_data['Description_HTML'], r_data['Skills'])
+
     # print(insert_query)
     # print(jb_detail)
 
