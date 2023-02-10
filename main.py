@@ -85,11 +85,11 @@ def read_job_json(cursor11):
         for file_name in [file for file in os.listdir(dir_path) if
                           (file.endswith('.json') and not (file.__contains__('done_')))]:
             path_with_file_name = dir_path + file_name
-            print(path_with_file_name)
+            # print(path_with_file_name)
             try:
                 with open(path_with_file_name) as json_file:
                     data = json.load(json_file)
-                    print(data)
+                    # print(data)
                     if add_new_record(cursor11, data):
                         new_file_name_with_path = dir_path + 'done_' + file_name
                         os.rename(path_with_file_name, new_file_name_with_path)
