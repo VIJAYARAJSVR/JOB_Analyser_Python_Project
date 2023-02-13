@@ -19,6 +19,15 @@ insert_query = '''INSERT INTO
  source,email,website,posted,applied,created,description,description_html,skill)
   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
 
+delete_query = ''' delete t1 FROM JOB_Analyser_App_jobdetail t1
+INNER  JOIN JOB_Analyser_App_jobdetail t2
+WHERE t1.id < t2.id AND
+    t1.company = t2.company AND
+    t1.designation = t2.designation AND
+    t1.source = t2.source AND
+    DATE(t1.applied) = DATE(t2.applied);
+'''
+
 
 def mysql_connect():
     try:
@@ -82,6 +91,20 @@ def add_new_record(cursor1, r_data):
         return False
 
 
+def delete_duplicate_records(cursor12):
+    try:
+        cursor12.execute(delete_query)
+        db.commit()
+        print("Successfully Deleted Duplicate records in Database")
+        return True
+    except mysql.Error as err:
+        print("MySql Exception: {}".format(err))
+        return False
+    except Exception as eee:
+        print("Exception: {}".format(eee))
+        return False
+
+
 def read_job_json(cursor11):
     try:
         # print(dir_path)
@@ -115,5 +138,27 @@ def read_job_json(cursor11):
 if __name__ == '__main__':
     db = mysql_connect()
     cursor = db.cursor()
+    delete_duplicate_records(cursor)
     read_job_json(cursor)
     db.close()
+
+# delete t1 FROM JOB_Analyser_App_jobdetail t1
+# INNER  JOIN JOB_Analyser_App_jobdetail t2
+# WHERE
+# 	t1.id < t2.id AND
+#     t1.company = t2.company AND
+#     t1.designation = t2.designation AND
+#     t1.source = t2.source AND
+#     DATE(t1.applied) = DATE(t2.applied);
+
+# SELECT company, COUNT(company),
+# designation,COUNT(designation),
+# source,COUNT(source),
+# DATE(applied) ,COUNT(applied) from JOB_Analyser_App_jobdetail
+# GROUP BY
+# company, designation,source, DATE(applied)
+# HAVING
+# COUNT(company) > 1
+# AND COUNT(designation) > 1
+# AND COUNT(source) > 1
+# AND COUNT(DATE(applied));
