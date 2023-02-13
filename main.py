@@ -55,8 +55,11 @@ def add_new_record(cursor1, r_data):
     # print(mydesc)
     # return
 
+    jb_url = r_data['Url']
+    jb_url = jb_url[:700]
+
     jb_detail = (
-        r_data['Company'], r_data['Designation'], r_data['Url'], r_data['Experience'], r_data['JobType'],
+        r_data['Company'], r_data['Designation'], jb_url, r_data['Experience'], r_data['JobType'],
         r_data['Salary'],
         r_data['JOBSource'],
         r_data['Email'], r_data['Website'], r_data['PostedDate'],
@@ -90,12 +93,17 @@ def read_job_json(cursor11):
                 with open(path_with_file_name) as json_file:
                     data = json.load(json_file)
                     # print(data)
-                    if add_new_record(cursor11, data):
+                    shall_i_proceed = add_new_record(cursor11, data)
+
+                    if shall_i_proceed:
                         new_file_name_with_path = dir_path + 'done_' + file_name
                         os.rename(path_with_file_name, new_file_name_with_path)
+                    else:
+                        continue
 
             except EnvironmentError:
                 print('EnvironmentError Exception')
+                continue
     except FileNotFoundError:
         print("Error: FileNotFoundError")
     except EOFError:
