@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 import os
-
+import re
 import mysql.connector as mysql
 from mysql.connector import Error
 
@@ -10,9 +10,16 @@ from mysql.connector import Error
 
 
 # dir_path = "/Volumes/Macintosh_HD2/Linkedin_JOB/"
-dir_path = "/Users/web_dev/Desktop/Linkedin_JOB/"
+dir_path = "/Users/web_dev/Desktop/Applied_JOB/"
 db_name = 'JOB_Analyser_DB'
 tbl_name = 'JOB_Analyser_App_jobdetail'
+
+dir_path_for_Job_Later = "/Users/web_dev/Desktop/Apply_Later/"
+tbl_name_for_Job_Later = 'JOB_Analyser_App_joblater'
+
+insert_query_for_Job_Later = '''INSERT INTO
+ JOB_Analyser_App_joblater(company,designation,webpage,captured,created)
+  VALUES (%s,%s,%s,%s,%s)'''
 
 insert_query = '''INSERT INTO
  JOB_Analyser_App_jobdetail(company,designation,url,experience,type,salary,
@@ -49,20 +56,56 @@ now = datetime.now()
 # now3 = datetime(year=2000, month=2, day=3, hour=5, minute=35, second=2).strftime("%H:%M %p")
 
 
-def format_applied_date(applied_dt, applied_time):
+def format_custom_date(custom_dt, custom_time):
     try:
-        arrdt = applied_dt.split("/")
-        arrtime = applied_time.split(":")
-        return datetime(day=int(arrdt[0]), month=int(arrdt[1]), year=int(arrdt[2]), hour=int(arrtime[0]),
-                        minute=int(arrtime[1]), second=int(arrtime[2]))
+        arr_dt = custom_dt.split("/")
+        arr_time = custom_time.split(":")
+        return datetime(day=int(arr_dt[0]), month=int(arr_dt[1]), year=int(arr_dt[2]), hour=int(arr_time[0]),
+                        minute=int(arr_time[1]), second=int(arr_time[2]))
     except:
         return now
 
 
+def add_new_record_Job_later(cursor1, r_data):
+    company = r_data['Company'].strip()
+    designation = r_data['Designation'].strip()
+
+    if (company == "") or (designation == ""):
+        print("Company or Designation is empty")
+        return False
+
+    jb_for_later = (
+        r_data['Company'], r_data['Designation'], r_data['WebPage'],
+        format_custom_date(r_data['CaptureDate'], r_data['CaptureTime']), datetime.now()
+    )
+
+    try:
+        cursor1.execute(insert_query_for_Job_Later, jb_for_later)
+        db.commit()
+        print("Saved Job Later in Database Successfully")
+        return True
+    except mysql.Error as err:
+        print("MySql Exception: {}".format(err))
+        return False
+    except Exception as eee:
+        print("Exception: {}".format(eee))
+        return False
+
+
 def add_new_record(cursor1, r_data):
-    # mydesc = r_data['Description']
-    # print(mydesc)
-    # return
+    company = r_data['Company'].strip()
+    designation = r_data['Designation'].strip()
+
+    if (company == "") or (designation == ""):
+        print("Company or Designation is empty")
+        return False
+
+    # is_company = re.search("\\sfound\\s|\sfound", company.lower())
+    # is_designation = re.search("\\sfound\\s|\sfounds", designation.lower())
+    #
+    # if (not is_company) or (not is_designation):
+    #     print("Company or Designation is not Found")
+    #     return False
 
     jb_url = r_data['Url']
     jb_url = jb_url[:700]
@@ -72,7 +115,7 @@ def add_new_record(cursor1, r_data):
         r_data['Salary'],
         r_data['JOBSource'],
         r_data['Email'], r_data['Website'], r_data['PostedDate'],
-        format_applied_date(r_data['AppliedDate'], r_data['AppliedTime']), now,
+        format_custom_date(r_data['AppliedDate'], r_data['AppliedTime']), now,
         r_data['Description'], r_data['Description_HTML'], r_data['Skills'])
 
     # print(insert_query)
@@ -103,6 +146,36 @@ def delete_duplicate_records(cursor12):
     except Exception as eee:
         print("Exception: {}".format(eee))
         return False
+
+
+def read_job_json_for_job_later(cursor11):
+    try:
+        # print(dir_path_for_Job_Later)
+        for file_name in [file for file in os.listdir(dir_path_for_Job_Later) if
+                          (file.endswith('.json') and not (file.__contains__('done_')))]:
+            path_with_file_name = dir_path_for_Job_Later + file_name
+            # print(path_with_file_name)
+            try:
+                with open(path_with_file_name) as json_file:
+                    data = json.load(json_file)
+                    print(data)
+                    shall_i_proceed = add_new_record_Job_later(cursor11, data)
+
+                    if shall_i_proceed:
+                        new_file_name_with_path = dir_path_for_Job_Later + 'done_' + file_name
+                        os.rename(path_with_file_name, new_file_name_with_path)
+                    else:
+                        continue
+
+            except EnvironmentError:
+                print('EnvironmentError Exception')
+                continue
+    except FileNotFoundError:
+        print("Error: FileNotFoundError")
+    except EOFError:
+        print("Exception")
+    except Exception:
+        print('General Exception')
 
 
 def read_job_json(cursor11):
@@ -140,6 +213,7 @@ if __name__ == '__main__':
     cursor = db.cursor()
     delete_duplicate_records(cursor)
     read_job_json(cursor)
+    read_job_json_for_job_later(cursor)
     db.close()
 
 # delete t1 FROM JOB_Analyser_App_jobdetail t1
