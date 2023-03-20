@@ -23,8 +23,8 @@ insert_query_for_Job_Later = '''INSERT INTO
 
 insert_query = '''INSERT INTO
  JOB_Analyser_App_jobdetail(company,designation,url,experience,type,salary,
- source,email,website,posted,applied,created,description,description_html,skill)
-  VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+ source,email,website,posted,applied,created,description,description_html,skill,updated)
+  VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
 
 delete_query = ''' delete t1 FROM JOB_Analyser_App_jobdetail t1
 INNER  JOIN JOB_Analyser_App_jobdetail t2
@@ -33,6 +33,13 @@ WHERE t1.id < t2.id AND
     t1.designation = t2.designation AND
     t1.source = t2.source AND
     DATE(t1.applied) = DATE(t2.applied);
+'''
+
+delete_JOB_Later_query = ''' delete t1 FROM JOB_Analyser_App_joblater t1
+INNER  JOIN JOB_Analyser_App_joblater t2
+WHERE t1.id < t2.id AND
+    t1.company = t2.company AND
+    t1.designation = t2.designation;
 '''
 
 
@@ -110,13 +117,16 @@ def add_new_record(cursor1, r_data):
     jb_url = r_data['Url']
     jb_url = jb_url[:700]
 
+    applied_dt = format_custom_date(r_data['AppliedDate'], r_data['AppliedTime'])
+    updated_dt = applied_dt
+
     jb_detail = (
         r_data['Company'], r_data['Designation'], jb_url, r_data['Experience'], r_data['JobType'],
         r_data['Salary'],
         r_data['JOBSource'],
         r_data['Email'], r_data['Website'], r_data['PostedDate'],
-        format_custom_date(r_data['AppliedDate'], r_data['AppliedTime']), now,
-        r_data['Description'], r_data['Description_HTML'], r_data['Skills'])
+        applied_dt, now,
+        r_data['Description'], r_data['Description_HTML'], r_data['Skills'], updated_dt)
 
     # print(insert_query)
     # print(jb_detail)
@@ -148,6 +158,20 @@ def delete_duplicate_records(cursor12):
         return False
 
 
+def delete_duplicate_JOB_Later_records(cursor13):
+    try:
+        cursor13.execute(delete_JOB_Later_query)
+        db.commit()
+        print("Successfully Deleted Duplicate records in Database")
+        return True
+    except mysql.Error as err:
+        print("MySql Exception: {}".format(err))
+        return False
+    except Exception as eee:
+        print("Exception: {}".format(eee))
+        return False
+
+
 def read_job_json_for_job_later(cursor11):
     try:
         # print(dir_path_for_Job_Later)
@@ -158,7 +182,7 @@ def read_job_json_for_job_later(cursor11):
             try:
                 with open(path_with_file_name) as json_file:
                     data = json.load(json_file)
-                    print(data)
+                    # print(data)
                     shall_i_proceed = add_new_record_Job_later(cursor11, data)
 
                     if shall_i_proceed:
@@ -212,9 +236,20 @@ if __name__ == '__main__':
     db = mysql_connect()
     cursor = db.cursor()
     delete_duplicate_records(cursor)
+    delete_duplicate_JOB_Later_records(cursor)
     read_job_json(cursor)
     read_job_json_for_job_later(cursor)
     db.close()
+
+# delete t1 FROM JOB_Analyser_App_jobdetail t1
+# INNER  JOIN JOB_Analyser_App_jobdetail t2
+# WHERE
+# 	t1.id < t2.id AND
+#     t1.company = t2.company AND
+#     t1.designation = t2.designation AND
+#     t1.source = t2.source AND
+#     DATE(t1.applied) = DATE(t2.applied);
+
 
 # delete t1 FROM JOB_Analyser_App_jobdetail t1
 # INNER  JOIN JOB_Analyser_App_jobdetail t2
