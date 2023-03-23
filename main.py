@@ -23,8 +23,8 @@ insert_query_for_Job_Later = '''INSERT INTO
 
 insert_query = '''INSERT INTO
  JOB_Analyser_App_jobdetail(company,designation,url,experience,type,salary,
- source,email,website,posted,applied,created,description,description_html,skill,updated)
-  VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+ source,email,website,posted,applied,created,description,description_html,skill,updated,status_id_id,note)
+  VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
 
 delete_query = ''' delete t1 FROM JOB_Analyser_App_jobdetail t1
 INNER  JOIN JOB_Analyser_App_jobdetail t2
@@ -126,7 +126,7 @@ def add_new_record(cursor1, r_data):
         r_data['JOBSource'],
         r_data['Email'], r_data['Website'], r_data['PostedDate'],
         applied_dt, now,
-        r_data['Description'], r_data['Description_HTML'], r_data['Skills'], updated_dt)
+        r_data['Description'], r_data['Description_HTML'], r_data['Skills'], updated_dt, 1, "")
 
     # print(insert_query)
     # print(jb_detail)
