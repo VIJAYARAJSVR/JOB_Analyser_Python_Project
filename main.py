@@ -17,6 +17,13 @@ tbl_name = 'JOB_Analyser_App_jobdetail'
 dir_path_for_Job_Later = "/Users/web_dev/Desktop/Apply_Later/"
 tbl_name_for_Job_Later = 'JOB_Analyser_App_joblater'
 
+dir_path_for_QA_Later = "/Users/web_dev/Desktop/QA_Later/"
+tbl_name_for_QA_Later = 'JOB_Analyser_App_questionanswerlater'
+
+insert_query_for_QA_Later = '''INSERT INTO
+ JOB_Analyser_App_questionanswerlater(category,question,answer,created)
+  VALUES (%s,%s,%s,%s)'''
+
 insert_query_for_Job_Later = '''INSERT INTO
  JOB_Analyser_App_joblater(company,designation,webpage,captured,created)
   VALUES (%s,%s,%s,%s,%s)'''
@@ -71,6 +78,33 @@ def format_custom_date(custom_dt, custom_time):
                         minute=int(arr_time[1]), second=int(arr_time[2]))
     except:
         return now
+
+
+def add_new_record_QA_later(cursor1, r_data):
+    category = r_data['Category'].strip()
+    question = r_data['Question'].strip()
+    answer = r_data['Answer'].strip()
+
+    if (category == "") or (question == "") or (answer == ""):
+        print("category or question or answer is empty")
+        return False
+    created = datetime.now()
+    QA_for_later = (category, question, answer, created)
+
+    try:
+        cursor1.execute(insert_query_for_QA_Later, QA_for_later)
+        db.commit()
+        print("Saved QA Later in Database Successfully")
+        return True
+
+    except mysql.Error as err:
+        print("Exception in method add_new_record_QA_later")
+        print("MySql Exception: {}".format(err))
+        return False
+    except Exception as eee:
+        print("Exception in method add_new_record_QA_later")
+        print("Exception: {}".format(eee))
+        return False
 
 
 def add_new_record_Job_later(cursor1, r_data):
@@ -172,6 +206,36 @@ def delete_duplicate_JOB_Later_records(cursor13):
         return False
 
 
+def read_QA_json_later(cursor11):
+    try:
+        # print(dir_path_for_QA_Later)
+        for file_name in [file for file in os.listdir(dir_path_for_QA_Later) if
+                          (file.endswith('.json') and not (file.__contains__('done_')))]:
+            path_with_file_name = dir_path_for_QA_Later + file_name
+            # print(path_with_file_name)
+            try:
+                with open(path_with_file_name) as json_file:
+                    data = json.load(json_file)
+                    # print(data)
+                    shall_i_proceed = add_new_record_QA_later(cursor11, data)
+
+                    if shall_i_proceed:
+                        new_file_name_with_path = dir_path_for_QA_Later + 'done_' + file_name
+                        os.rename(path_with_file_name, new_file_name_with_path)
+                    else:
+                        continue
+
+            except EnvironmentError:
+                print('EnvironmentError Exception in read_QA_json_later')
+                continue
+    except FileNotFoundError:
+        print("Error: FileNotFoundError in read_QA_json_later")
+    except EOFError:
+        print("Exception in read_QA_json_later")
+    except Exception:
+        print('General Exception in function name: read_QA_json_later  ' + str(Exception))
+
+
 def read_job_json_for_job_later(cursor11):
     try:
         # print(dir_path_for_Job_Later)
@@ -199,7 +263,7 @@ def read_job_json_for_job_later(cursor11):
     except EOFError:
         print("Exception")
     except Exception:
-        print('General Exception')
+        print('General Exception in function name: read_job_json_for_job_later  ' + str(Exception))
 
 
 def read_job_json(cursor11):
@@ -229,7 +293,8 @@ def read_job_json(cursor11):
     except EOFError:
         print("Exception")
     except Exception:
-        print('General Exception')
+        print('General Exception in function name: read_job_json  ' + str(Exception))
+        print(Exception)
 
 
 if __name__ == '__main__':
@@ -239,6 +304,7 @@ if __name__ == '__main__':
     delete_duplicate_JOB_Later_records(cursor)
     read_job_json(cursor)
     read_job_json_for_job_later(cursor)
+    read_QA_json_later(cursor)
     db.close()
 
 # delete t1 FROM JOB_Analyser_App_jobdetail t1
