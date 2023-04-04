@@ -20,6 +20,13 @@ tbl_name_for_Job_Later = 'JOB_Analyser_App_joblater'
 dir_path_for_QA_Later = "/Users/web_dev/Desktop/QA_Later/"
 tbl_name_for_QA_Later = 'JOB_Analyser_App_questionanswerlater'
 
+dir_path_for_Contacts = "/Users/web_dev/Desktop/Contacts/"
+tbl_name_for_Contacts = 'JOB_Analyser_App_contact'
+
+insert_query_for_Contacts = '''INSERT INTO
+ JOB_Analyser_App_contact(company,designation,name,email,website,phone_number,created)
+  VALUES (%s,%s,%s,%s,%s,%s,%s)'''
+
 insert_query_for_QA_Later = '''INSERT INTO
  JOB_Analyser_App_questionanswerlater(category,question,answer,created)
   VALUES (%s,%s,%s,%s)'''
@@ -78,6 +85,33 @@ def format_custom_date(custom_dt, custom_time):
                         minute=int(arr_time[1]), second=int(arr_time[2]))
     except:
         return now
+
+
+def add_new_record_Contacts(cursor1, r_data):
+    company = r_data['Company'].strip()
+    designation = r_data['Designation'].strip()
+    name = r_data['Name'].strip()
+    email = r_data['Email'].strip()
+    website = r_data['Website'].strip()
+    phone = r_data['Phone'].strip()
+
+    created = datetime.now()
+    contact_obj = (company, designation, name, email, website, phone, created)
+
+    try:
+        cursor1.execute(insert_query_for_Contacts, contact_obj)
+        db.commit()
+        print("Saved Contacts in Database Successfully")
+        return True
+
+    except mysql.Error as err:
+        print("Exception in method add_new_record_Contacts")
+        print("MySql Exception: {}".format(err))
+        return False
+    except Exception as eee:
+        print("Exception in method add_new_record_Contacts")
+        print("Exception: {}".format(eee))
+        return False
 
 
 def add_new_record_QA_later(cursor1, r_data):
@@ -206,6 +240,36 @@ def delete_duplicate_JOB_Later_records(cursor13):
         return False
 
 
+def read_Contacts_json(cursor11):
+    try:
+        # print(dir_path_for_QA_Later)
+        for file_name in [file for file in os.listdir(dir_path_for_Contacts) if
+                          (file.endswith('.json') and not (file.__contains__('done_')))]:
+            path_with_file_name = dir_path_for_Contacts + file_name
+            # print(path_with_file_name)
+            try:
+                with open(path_with_file_name) as json_file:
+                    data = json.load(json_file)
+                    # print(data)
+                    shall_i_proceed = add_new_record_Contacts(cursor11, data)
+
+                    if shall_i_proceed:
+                        new_file_name_with_path = dir_path_for_Contacts + 'done_' + file_name
+                        os.rename(path_with_file_name, new_file_name_with_path)
+                    else:
+                        continue
+
+            except EnvironmentError:
+                print('EnvironmentError Exception in read_Contacts_json')
+                continue
+    except FileNotFoundError:
+        print("Error: FileNotFoundError in read_Contacts_json")
+    except EOFError:
+        print("Exception in read_Contacts_json")
+    except Exception:
+        print('General Exception in function name: read_Contacts_json  ' + str(Exception))
+
+
 def read_QA_json_later(cursor11):
     try:
         # print(dir_path_for_QA_Later)
@@ -305,6 +369,7 @@ if __name__ == '__main__':
     read_job_json(cursor)
     read_job_json_for_job_later(cursor)
     read_QA_json_later(cursor)
+    read_Contacts_json(cursor)
     db.close()
 
 # delete t1 FROM JOB_Analyser_App_jobdetail t1
