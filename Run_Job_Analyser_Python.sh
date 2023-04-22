@@ -1,4 +1,9 @@
 #!/bin/zsh
+#IMPORTANT IMPORTANT
+#After creating the below script and save
+#run the below command
+#open terminal go to the folder then  chmod 744 FileName
+# example chmod 744 Run_Job_Analyser_Python.sh
 echo ""
 echo ""
 echo "START running JOB_Analyser_Python_Project"

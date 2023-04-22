@@ -334,7 +334,8 @@ def read_job_json(cursor11):
     try:
         # print(dir_path)
         for file_name in [file for file in os.listdir(dir_path) if
-                          (file.endswith('.json') and not (file.__contains__('done_')))]:
+                          (file.endswith('.json') and not (file.__contains__('done_')) and not (
+                          file.__contains__('Posted')))]:
             path_with_file_name = dir_path + file_name
             # print(path_with_file_name)
             try:
@@ -370,6 +371,7 @@ if __name__ == '__main__':
     read_job_json_for_job_later(cursor)
     read_QA_json_later(cursor)
     read_Contacts_json(cursor)
+    delete_duplicate_records(cursor)
     db.close()
 
 # delete t1 FROM JOB_Analyser_App_jobdetail t1
