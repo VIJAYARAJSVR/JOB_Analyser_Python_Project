@@ -88,12 +88,12 @@ def format_custom_date(custom_dt, custom_time):
 
 
 def add_new_record_Contacts(cursor1, r_data):
-    company = r_data['Company'].strip()
-    designation = r_data['Designation'].strip()
-    name = r_data['Name'].strip()
-    email = r_data['Email'].strip()
-    website = r_data['Website'].strip()
-    phone = r_data['Phone'].strip()
+    company = r_data['Company'].replace("|", " ").strip()
+    designation = r_data['Designation'].replace("|", " ").strip()
+    name = r_data['Name'].replace("|", " ").strip()
+    email = r_data['Email'].replace("|", " ").strip()
+    website = r_data['Website'].replace("|", " ").strip()
+    phone = r_data['Phone'].replace("|", " ").strip()
 
     created = datetime.now()
     contact_obj = (company, designation, name, email, website, phone, created)
@@ -335,7 +335,7 @@ def read_job_json(cursor11):
         # print(dir_path)
         for file_name in [file for file in os.listdir(dir_path) if
                           (file.endswith('.json') and not (file.__contains__('done_')) and not (
-                          file.__contains__('Posted')))]:
+                                  file.__contains__('Posted')))]:
             path_with_file_name = dir_path + file_name
             # print(path_with_file_name)
             try:
