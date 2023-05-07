@@ -37,8 +37,8 @@ insert_query_for_Job_Later = '''INSERT INTO
 
 insert_query = '''INSERT INTO
  JOB_Analyser_App_jobdetail(company,designation,url,experience,type,salary,
- source,email,website,posted,applied,created,description,description_html,skill,updated,status_id_id,note)
-  VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
+ source,email,website,posted,applied,created,description,description_html,skill,updated,status_id_id,note,applied_dt,desig)
+  VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''
 
 delete_query = ''' delete t1 FROM JOB_Analyser_App_jobdetail t1
 INNER  JOIN JOB_Analyser_App_jobdetail t2
@@ -75,6 +75,67 @@ now = datetime.now()
 
 # now2 = datetime(2023, 1, 10, 0, 0, 0, 0)
 # now3 = datetime(year=2000, month=2, day=3, hour=5, minute=35, second=2).strftime("%H:%M %p")
+
+
+def get_date_only_string(custom_dt):
+    try:
+        arr_dt = custom_dt.split("/")
+        # dt = datetime(month=int(arr_dt[1]), day=int(arr_dt[0]), year=int(arr_dt[2]))
+        return arr_dt[1] + "/" + arr_dt[0] + "/" + arr_dt[2]
+    except:
+        return now
+
+
+def get_designation_short(actual_designation):
+    desig = "Other"
+    arr1 = ['Lead', 'Team', 'Scientist', 'Project', 'Cloud', 'Android', 'iOS', 'Angular', 'Flutter', 'Analyst',
+            'Django',
+            'Mobile', 'Node', 'React', 'Python', 'Back', 'Front', 'Full', 'Stack', 'Analysis', 'Software', ]
+
+    try:
+        for tech in arr1:
+            if tech.lower() in actual_designation.lower():
+                desig = tech
+                break
+
+        arr2 = ['Full', 'Stack', ]
+        for tech in arr2:
+            if tech.lower() in desig.lower():
+                desig = "Full Stack"
+                break
+
+        arr3 = ['Back', 'Front', ]
+        for tech in arr3:
+            if tech.lower() in desig.lower():
+                desig = tech + " End"
+                break
+
+        if 'analysis' in actual_designation.lower():
+            desig = "Analyst"
+
+        if 'react' in actual_designation.lower():
+            desig = "React.js"
+
+        if 'node' in actual_designation.lower():
+            desig = "Node.js"
+
+        if 'react' in actual_designation.lower():
+            if 'native' in actual_designation.lower():
+                desig = "React Native"
+
+        if 'data' in actual_designation.lower():
+            if 'engineer' in actual_designation.lower():
+                desig = "DATA"
+
+        arr4 = ['Team', 'Lead', ]
+        for tech in arr4:
+            if tech.lower() in actual_designation.lower():
+                desig = "Lead"
+                break
+
+        return desig
+    except:
+        return desig
 
 
 def format_custom_date(custom_dt, custom_time):
@@ -187,6 +248,8 @@ def add_new_record(cursor1, r_data):
 
     applied_dt = format_custom_date(r_data['AppliedDate'], r_data['AppliedTime'])
     updated_dt = applied_dt
+    applied_dt_dt = get_date_only_string(r_data['AppliedDate'])
+    desig = get_designation_short(r_data['Designation'])
 
     jb_detail = (
         r_data['Company'], r_data['Designation'], jb_url, r_data['Experience'], r_data['JobType'],
@@ -194,7 +257,7 @@ def add_new_record(cursor1, r_data):
         r_data['JOBSource'],
         r_data['Email'], r_data['Website'], r_data['PostedDate'],
         applied_dt, now,
-        r_data['Description'], r_data['Description_HTML'], r_data['Skills'], updated_dt, 1, "")
+        r_data['Description'], r_data['Description_HTML'], r_data['Skills'], updated_dt, 1, "", applied_dt_dt, desig)
 
     # print(insert_query)
     # print(jb_detail)
